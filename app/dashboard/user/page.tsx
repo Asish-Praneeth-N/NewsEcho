@@ -3,22 +3,51 @@
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Mail, Clock, Star, ArrowRight, Search, Filter } from "lucide-react";
 import Link from "next/link";
 
+import { collection, query, where, orderBy, getDocs, limit } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+
 export default function UserDashboard() {
     const { user, loading } = useAuth();
     const router = useRouter();
+    const [latestIssues, setLatestIssues] = useState<any[]>([]);
+    const [fetching, setFetching] = useState(true);
 
     useEffect(() => {
         if (!loading && !user) {
             router.push("/login");
+        } else if (user) {
+            fetchLatestIssues();
         }
     }, [user, loading, router]);
 
-    if (loading) {
+    const fetchLatestIssues = async () => {
+        if (!db) return;
+        try {
+            const q = query(
+                collection(db, "newsletters"),
+                where("status", "==", "published"),
+                orderBy("createdAt", "desc"),
+                limit(5)
+            );
+            const snapshot = await getDocs(q);
+            const data = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setLatestIssues(data);
+        } catch (error) {
+            console.error("Error fetching newsletters:", error);
+        } finally {
+            setFetching(false);
+        }
+    };
+
+    if (loading || fetching) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
@@ -60,7 +89,7 @@ export default function UserDashboard() {
                     </div>
                 </div>
 
-                {/* Subscriptions Grid */}
+                {/* Subscriptions Grid - Placeholder for now */}
                 <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                     <Star className="h-5 w-5 text-yellow-500" />
                     Your Subscriptions
@@ -89,9 +118,9 @@ export default function UserDashboard() {
                                     <Clock className="h-3 w-3" />
                                     Next: {sub.nextIssue}
                                 </span>
-                                <Link href={`/newsletter/${sub.id}`} className="text-sm font-bold hover:underline flex items-center gap-1">
+                                <button className="text-sm font-bold hover:underline flex items-center gap-1">
                                     Read <ArrowRight className="h-3 w-3" />
-                                </Link>
+                                </button>
                             </div>
                         </motion.div>
                     ))}
@@ -103,26 +132,32 @@ export default function UserDashboard() {
                     Latest Issues
                 </h2>
                 <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                        <motion.div
-                            key={i}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.3 + (i * 0.1) }}
-                            className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-between group"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="h-10 w-10 rounded-lg bg-gray-800 flex items-center justify-center">
-                                    <Mail className="h-5 w-5 text-gray-400" />
+                    {latestIssues.length === 0 ? (
+                        <p className="text-gray-400">No published newsletters yet.</p>
+                    ) : (
+                        latestIssues.map((issue, i) => (
+                            <motion.div
+                                key={issue.id}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.3 + (i * 0.1) }}
+                                className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-between group"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="h-10 w-10 rounded-lg bg-gray-800 flex items-center justify-center">
+                                        <Mail className="h-5 w-5 text-gray-400" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold group-hover:text-blue-400 transition-colors">{issue.title}</h4>
+                                        <p className="text-sm text-gray-400">By {issue.author} • {issue.createdAt?.toDate().toLocaleDateString()}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h4 className="font-bold group-hover:text-blue-400 transition-colors">The Future of AI Design</h4>
-                                    <p className="text-sm text-gray-400">Tech Weekly • 5 min read</p>
-                                </div>
-                            </div>
-                            <span className="text-xs text-gray-500">2 hours ago</span>
-                        </motion.div>
-                    ))}
+                                <Link href={`/newsletter/${issue.id}`} className="text-xs text-blue-400 hover:underline">
+                                    Read Now
+                                </Link>
+                            </motion.div>
+                        ))
+                    )}
                 </div>
             </main>
         </div>

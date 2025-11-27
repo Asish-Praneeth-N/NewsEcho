@@ -46,6 +46,7 @@ export default function Login() {
 
     const handleGoogleLogin = async () => {
         setError("");
+        if (!auth || !db) return;
         try {
             const provider = new GoogleAuthProvider();
             const result = await signInWithPopup(auth as Auth, provider);

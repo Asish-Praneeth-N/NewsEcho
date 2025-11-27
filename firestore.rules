@@ -13,12 +13,19 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
+    // Helper function to check if user is an admin
+    // Assuming 'role' field in 'users' collection determines admin status
+    function isAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
     // Users Collection
     match /users/{userId} {
-      // Allow reading own profile
-      allow read: if isAuthenticated() && isOwner(userId);
-      // Allow creating/updating own profile
-      allow write: if isAuthenticated() && isOwner(userId);
+      // Users can read/write their own profile
+      allow read, write: if isAuthenticated() && isOwner(userId);
+      // Admins can read/write all profiles
+      allow read, write: if isAdmin();
     }
 
     // Usernames Collection (for uniqueness check)
@@ -30,20 +37,32 @@ service cloud.firestore {
 
     // Newsletters Collection
     match /newsletters/{newsletterId} {
-      // Allow reading if published OR if owner
-      allow read: if resource.data.status == 'published' || (isAuthenticated() && resource.data.userId == request.auth.uid);
-      
-      // Allow creation if authenticated
-      // Note: We should validate that the 'userId' field in the new document matches request.auth.uid
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      
-      // Allow update/delete if owner
-      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      // Public can read published newsletters (assuming 'status' field)
+      allow read: if resource.data.status == 'published';
+      // Admins can read/write all newsletters
+      allow read, write: if isAdmin();
     }
-    
-    // Default deny
-    match /{document=**} {
-      allow read, write: if false;
+
+    // Newsletter Analytics Collection
+    match /newsletter_analytics/{analyticsId} {
+      // Only admins can read analytics
+      allow read: if isAdmin();
+      // System writes analytics (or admin for testing)
+      allow write: if isAdmin(); 
+    }
+
+    // Audit Logs Collection
+    match /audit_logs/{logId} {
+      // Only admins can read audit logs
+      allow read: if isAdmin();
+      // Admins (and system via admin SDK) can write logs
+      allow write: if isAdmin();
+    }
+
+    // System Settings Collection
+    match /system_settings/{settingId} {
+      // Only admins can read/write settings
+      allow read, write: if isAdmin();
     }
   }
 }

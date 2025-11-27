@@ -3,25 +3,73 @@
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Users, Mail, TrendingUp, Settings, Plus, FileText, Activity, ArrowUpRight } from "lucide-react";
+import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function AdminDashboard() {
-    const { user, loading, isAdmin } = useAuth();
+    const { user, loading: authLoading, isAdmin } = useAuth();
     const router = useRouter();
+    const [stats, setStats] = useState([
+        { name: 'Total Users', value: '...', change: '', icon: Users, color: 'text-blue-400' },
+        { name: 'Active Newsletters', value: '...', change: '', icon: Mail, color: 'text-purple-400' },
+    ]);
+    const [recentActivity, setRecentActivity] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!loading) {
+        if (!authLoading) {
             if (!user) {
                 router.push("/login");
             } else if (!isAdmin) {
                 router.push("/dashboard/user");
+            } else {
+                fetchDashboardData();
             }
         }
-    }, [user, loading, isAdmin, router]);
+    }, [user, authLoading, isAdmin, router]);
 
-    if (loading) {
+    const fetchDashboardData = async () => {
+        if (!db) return;
+        const firestore = db;
+        try {
+            // Fetch Users Count
+            const usersSnapshot = await getDocs(collection(firestore, "users"));
+            const usersCount = usersSnapshot.size;
+
+            // Fetch Newsletters Count
+            const newslettersSnapshot = await getDocs(collection(firestore, "newsletters"));
+            const newslettersCount = newslettersSnapshot.size;
+
+            // Fetch Recent Activity (Last 5 Newsletters)
+            const activityQuery = query(
+                collection(firestore, "newsletters"),
+                orderBy("createdAt", "desc"),
+                limit(5)
+            );
+            const activitySnapshot = await getDocs(activityQuery);
+            const activityData = activitySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                type: 'newsletter', // For now, only newsletters are activity
+                timestamp: doc.data().createdAt
+            }));
+
+            setStats([
+                { name: 'Total Users', value: usersCount.toString(), change: '', icon: Users, color: 'text-blue-400' },
+                { name: 'Active Newsletters', value: newslettersCount.toString(), change: '', icon: Mail, color: 'text-purple-400' },
+            ]);
+            setRecentActivity(activityData);
+        } catch (error) {
+            console.error("Error fetching dashboard data:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (authLoading || loading) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
@@ -30,13 +78,6 @@ export default function AdminDashboard() {
     }
 
     if (!user || !isAdmin) return null;
-
-    const stats = [
-        { name: 'Total Users', value: '1,234', change: '+12%', icon: Users, color: 'text-blue-400' },
-        { name: 'Active Newsletters', value: '45', change: '+5%', icon: Mail, color: 'text-purple-400' },
-        { name: 'Revenue', value: '$12,345', change: '+18%', icon: TrendingUp, color: 'text-green-400' },
-        { name: 'Avg. Open Rate', value: '42%', change: '+2%', icon: Activity, color: 'text-yellow-400' },
-    ];
 
     return (
         <div className="min-h-screen bg-black text-white selection:bg-white selection:text-black font-sans">
@@ -53,7 +94,10 @@ export default function AdminDashboard() {
                             <Settings className="h-4 w-4" />
                             Settings
                         </button>
-                        <button className="flex items-center gap-2 px-6 py-2 rounded-full bg-white text-black hover:bg-gray-200 transition-colors text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105 transform duration-200">
+                        <button
+                            onClick={() => router.push('/dashboard/admin/newsletters/new')}
+                            className="flex items-center gap-2 px-6 py-2 rounded-full bg-white text-black hover:bg-gray-200 transition-colors text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105 transform duration-200"
+                        >
                             <Plus className="h-4 w-4" />
                             New Newsletter
                         </button>
@@ -61,7 +105,7 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                     {stats.map((stat, index) => (
                         <motion.div
                             key={stat.name}
@@ -74,10 +118,6 @@ export default function AdminDashboard() {
                                 <div className={`p-3 rounded-xl bg-white/5 ${stat.color} group-hover:scale-110 transition-transform`}>
                                     <stat.icon className="h-6 w-6" />
                                 </div>
-                                <span className="flex items-center text-xs font-medium text-green-400 bg-green-400/10 px-2 py-1 rounded-full">
-                                    {stat.change}
-                                    <ArrowUpRight className="h-3 w-3 ml-1" />
-                                </span>
                             </div>
                             <h3 className="text-3xl font-bold mb-1">{stat.value}</h3>
                             <p className="text-sm text-gray-400">{stat.name}</p>
@@ -86,7 +126,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Main Chart Area */}
+                    {/* Main Chart Area - Placeholder for now as we don't have historical data yet */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -102,7 +142,7 @@ export default function AdminDashboard() {
                             </select>
                         </div>
                         <div className="h-64 flex items-center justify-center text-gray-500 border-2 border-dashed border-white/10 rounded-xl">
-                            Chart Placeholder
+                            <p>Analytics data will appear here once enough data is collected.</p>
                         </div>
                     </motion.div>
 
@@ -115,19 +155,30 @@ export default function AdminDashboard() {
                     >
                         <h2 className="text-xl font-bold mb-6">Recent Activity</h2>
                         <div className="space-y-6">
-                            {[1, 2, 3, 4].map((i) => (
-                                <div key={i} className="flex items-start gap-4">
-                                    <div className="h-10 w-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                                        <FileText className="h-5 w-5 text-blue-400" />
+                            {recentActivity.length === 0 ? (
+                                <p className="text-gray-400 text-sm">No recent activity.</p>
+                            ) : (
+                                recentActivity.map((activity, i) => (
+                                    <div key={activity.id} className="flex items-start gap-4">
+                                        <div className="h-10 w-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                                            <FileText className="h-5 w-5 text-blue-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-white">
+                                                New newsletter published: <span className="text-gray-300">{activity.title}</span>
+                                            </p>
+                                            <p className="text-xs text-gray-400 mt-1">
+                                                {activity.timestamp?.toDate().toLocaleDateString()}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-white">New newsletter published</p>
-                                        <p className="text-xs text-gray-400 mt-1">2 hours ago</p>
-                                    </div>
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
-                        <button className="w-full mt-8 py-3 rounded-xl border border-white/10 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+                        <button
+                            onClick={() => router.push('/dashboard/admin/newsletters')}
+                            className="w-full mt-8 py-3 rounded-xl border border-white/10 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+                        >
                             View All Activity
                         </button>
                     </motion.div>
@@ -138,11 +189,17 @@ export default function AdminDashboard() {
                     <h2 className="text-xl font-bold text-white mb-6">Quick Actions</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {[
-                            { title: 'Create Newsletter', desc: 'Draft and publish a new issue', icon: FileText },
-                            { title: 'Manage Subscribers', desc: 'View and edit subscriber list', icon: Users },
-                            { title: 'Platform Settings', desc: 'Configure general settings', icon: Settings },
+                            { title: 'Manage Newsletters', desc: 'Draft, publish, and edit newsletters', icon: FileText, href: '/dashboard/admin/newsletters' },
+                            { title: 'Create Newsletter', desc: 'Write a new issue', icon: Plus, href: '/dashboard/admin/newsletters/new' },
+                            { title: 'User Management', desc: 'View and manage users', icon: Users, href: '/dashboard/admin/users' },
+                            { title: 'Audit Logs', desc: 'View system activity', icon: Activity, href: '/dashboard/admin/audit' },
+                            { title: 'Platform Settings', desc: 'Configure general settings', icon: Settings, href: '/dashboard/admin/settings' },
                         ].map((action, i) => (
-                            <button key={i} className="flex items-center gap-4 p-6 rounded-2xl bg-gray-900/30 border border-white/10 hover:bg-gray-900 hover:border-white/30 transition-all text-left group">
+                            <button
+                                key={i}
+                                onClick={() => router.push(action.href)}
+                                className="flex items-center gap-4 p-6 rounded-2xl bg-gray-900/30 border border-white/10 hover:bg-gray-900 hover:border-white/30 transition-all text-left group"
+                            >
                                 <div className="p-3 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
                                     <action.icon className="h-6 w-6 text-gray-300 group-hover:text-white" />
                                 </div>
