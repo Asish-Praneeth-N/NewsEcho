@@ -6,5 +6,7 @@ export interface UserProfile {
     displayName: string | null;
     photoURL: string | null;
     role: UserRole;
+    bio?: string;
+    username?: string;
     createdAt: any; // Firestore Timestamp
 }
