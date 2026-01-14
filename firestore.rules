@@ -79,8 +79,13 @@ service cloud.firestore {
        allow read: if isAuth();
        // Create: must be author
        allow create: if isAuth() && request.resource.data.authorId == request.auth.uid;
-       // Update/Delete: Author or Admin
-       allow update, delete: if isAuth() && (resource.data.authorId == request.auth.uid || isAdmin());
+       // Update: Author (within 3 mins) or Admin
+       allow update: if isAuth() && (
+         isAdmin() || 
+         (resource.data.authorId == request.auth.uid && request.time < resource.data.createdAt + duration.value(3, 'm'))
+       );
+       // Delete: Author or Admin
+       allow delete: if isAuth() && (resource.data.authorId == request.auth.uid || isAdmin());
     }
 
     // Bookmarks (Saved Newsletters)

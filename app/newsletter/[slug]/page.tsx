@@ -5,6 +5,7 @@ import { collection, query, where, getDocs, doc, setDoc, deleteDoc, getDoc } fro
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { UserNavbar } from "@/app/components/layout/UserNavbar";
+import { DiscussionBoard } from "@/app/components/community/DiscussionBoard";
 import { Loader2, Calendar, User, Clock, Share2, Bookmark, Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { notFound, useParams } from "next/navigation";
@@ -249,6 +250,12 @@ export default function NewsletterReader() {
                             )}
                         </button>
                     </div>
+                </div>
+
+                {/* Community Discussion Section */}
+                <div className="mt-20 pt-12 border-t border-neutral-800">
+                    <h3 className="text-2xl font-serif font-bold mb-8">Discussion</h3>
+                    <DiscussionBoard newsletterId={post.id} />
                 </div>
 
             </article>
