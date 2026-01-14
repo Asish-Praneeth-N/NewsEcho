@@ -2,7 +2,7 @@ import { MessageSquare, Heart } from "lucide-react";
 
 export default function CommunityHighlight() {
     return (
-        <section className="py-24 bg-neutral-900 text-white overflow-hidden relative">
+        <section className="py-24 bg-transparent text-white overflow-hidden relative">
             <div className="container mx-auto px-4 relative z-10 max-w-4xl text-center">
 
                 <h2 className="text-3xl md:text-5xl font-serif italic mb-6">More than just email.</h2>

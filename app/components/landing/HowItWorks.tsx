@@ -20,7 +20,7 @@ export default function HowItWorks() {
     ];
 
     return (
-        <section className="py-24 bg-black border-t border-neutral-800">
+        <section className="py-24 bg-transparent border-t border-white/5">
             <div className="container mx-auto px-4 max-w-6xl">
                 <div className="text-center mb-16">
                     <h2 className="text-3xl font-serif italic mb-4 text-white">How it works</h2>

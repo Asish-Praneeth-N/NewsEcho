@@ -7,27 +7,22 @@ import Footer from "./components/landing/Footer";
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col bg-black text-white">
-      <HeroSection />
-      <HowItWorks />
-      <KeyFeatures />
-      <NewsletterPreview />
-      <CommunityHighlight />
+    <main className="min-h-screen flex flex-col bg-black text-white relative overflow-hidden">
+      {/* Background Gradients (Same as Auth Pages) */}
+      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-900/20 blur-[120px] rounded-full pointer-events-none z-0"></div>
+      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-900/20 blur-[120px] rounded-full pointer-events-none z-0"></div>
 
-      {/* Final CTA */}
-      <section className="py-24 bg-black text-center border-t border-neutral-900">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-serif mb-6 text-white">Ready to start your publication?</h2>
-          <p className="text-secondary max-w-xl mx-auto mb-10">
-            Join thousands of writers who trust NewsEcho for their daily delivery.
-          </p>
-          <button className="bg-white text-black px-8 py-4 rounded-lg font-medium text-lg hover:bg-gray-200 transition-colors shadow-lg shadow-neutral-900">
-            Start Publishing for Free
-          </button>
-        </div>
-      </section>
+      <div className="relative z-10">
+        <HeroSection />
+        <HowItWorks />
+        <KeyFeatures />
+        <NewsletterPreview />
+        <CommunityHighlight />
 
-      <Footer />
+
+
+        <Footer />
+      </div>
     </main>
   );
 }

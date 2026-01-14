@@ -3,7 +3,7 @@ import { ArrowRight, Calendar } from "lucide-react";
 
 export default function NewsletterPreview() {
     return (
-        <section className="py-24 bg-black">
+        <section className="py-24 bg-transparent">
             <div className="container mx-auto px-4 max-w-5xl">
                 <div className="grid md:grid-cols-2 gap-12 items-center">
 

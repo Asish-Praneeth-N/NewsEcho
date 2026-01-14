@@ -25,7 +25,7 @@ export default function KeyFeatures() {
     ];
 
     return (
-        <section className="py-24 bg-neutral-950">
+        <section className="py-24 bg-transparent">
             <div className="container mx-auto px-4 max-w-6xl">
                 <div className="mb-16">
                     <h2 className="text-3xl font-serif italic mb-4 text-left text-white">Platform Capabilities</h2>
@@ -34,7 +34,7 @@ export default function KeyFeatures() {
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {features.map((feature, idx) => (
-                        <div key={idx} className="bg-black p-6 rounded-lg border border-neutral-800 shadow-sm hover:border-neutral-700 transition-all group">
+                        <div key={idx} className="glass-effect p-6 rounded-lg border border-white/10 shadow-sm hover:border-white/20 transition-all group bg-neutral-900/40">
                             <div className="w-10 h-10 rounded bg-neutral-900 flex items-center justify-center text-gray-300 mb-5 group-hover:bg-white group-hover:text-black transition-colors">
                                 {feature.icon}
                             </div>

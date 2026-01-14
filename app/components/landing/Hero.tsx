@@ -4,20 +4,13 @@ import Link from "next/link";
 export default function HeroSection() {
     return (
         <section className="relative w-full min-h-[90vh] flex flex-col items-center justify-center pt-24 pb-12 overflow-hidden">
-            {/* Background Grid Pattern is applied globally to body, but we can enhance it here if needed */}
-            <div className="absolute inset-0 z-0 bg-grid-pattern opacity-40"></div>
+            {/* Global Grid is now in page.tsx */}
 
             {/* Content Container */}
             <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 text-center max-w-5xl">
 
-                {/* Badge / Announcement */}
-                <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 rounded-full bg-neutral-900 border border-neutral-800 text-sm text-gray-400 animate-fade-in-up">
-                    <span className="flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                    <span>Construction in Progress</span>
-                </div>
-
                 {/* Headline */}
-                <h1 className="text-5xl md:text-7xl font-serif font-medium leading-[1.1] mb-6 tracking-tight text-white animate-fade-in-up delay-100">
+                <h1 className="text-5xl md:text-7xl font-serif font-medium leading-[1.1] mb-6 tracking-tight text-white animate-fade-in-up delay-100 pt-16">
                     Newsletters, <span className="italic font-serif text-gray-300">Delivered Intelligently.</span>
                 </h1>
 
@@ -35,10 +28,10 @@ export default function HeroSection() {
                         Get Started <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                     </Link>
                     <Link
-                        href="#explore"
+                        href="/login"
                         className="px-8 py-3.5 bg-black border border-neutral-800 text-white rounded-lg text-sm font-medium hover:bg-neutral-900 transition-all"
                     >
-                        Explore Newsletters
+                        Log in
                     </Link>
                 </div>
 
