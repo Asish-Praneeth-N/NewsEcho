@@ -75,7 +75,7 @@ export default function NewsletterList() {
                                     <h3 className="font-medium text-lg text-white mb-1 group-hover:text-indigo-400 transition-colors">{post.title}</h3>
                                     <div className="flex items-center gap-3 text-xs text-neutral-500 uppercase tracking-wide">
                                         <span className={`px-2 py-0.5 rounded border ${post.status === 'published' ? 'bg-emerald-950/50 text-emerald-500 border-emerald-900' :
-                                                'bg-neutral-800 text-neutral-400 border-neutral-700'
+                                            'bg-neutral-800 text-neutral-400 border-neutral-700'
                                             }`}>
                                             {post.status}
                                         </span>
@@ -95,9 +95,9 @@ export default function NewsletterList() {
                                 </Link> */}
                                 {/* Link to view page later */}
 
-                                <button className="p-2 text-neutral-500 hover:text-white transition-colors" title="Edit">
+                                <Link href={`/admin/newsletters/${post.id}`} className="p-2 text-neutral-500 hover:text-white transition-colors" title="Edit">
                                     <Edit size={18} />
-                                </button>
+                                </Link>
                                 <button
                                     onClick={() => handleDelete(post.id)}
                                     className="p-2 text-neutral-500 hover:text-red-500 transition-colors"

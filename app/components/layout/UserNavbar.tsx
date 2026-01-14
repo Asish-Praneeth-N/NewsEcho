@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Home, Newspaper, Users, Bookmark, User, LogOut } from "lucide-react";
 
-export default function UserNavbar() {
+export function UserNavbar() {
     const pathname = usePathname();
     const { logout } = useAuth();
 
@@ -34,8 +34,8 @@ export default function UserNavbar() {
                                         key={item.href}
                                         href={item.href}
                                         className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors ${isActive
-                                                ? "bg-white/10 text-white"
-                                                : "text-neutral-400 hover:text-white hover:bg-white/5"
+                                            ? "bg-white/10 text-white"
+                                            : "text-neutral-400 hover:text-white hover:bg-white/5"
                                             }`}
                                     >
                                         {item.icon}
@@ -65,8 +65,8 @@ export default function UserNavbar() {
                             key={item.href}
                             href={item.href}
                             className={`p-3 rounded-lg flex flex-col items-center gap-1 transition-colors ${isActive
-                                    ? "text-white bg-white/10"
-                                    : "text-neutral-500"
+                                ? "text-white bg-white/10"
+                                : "text-neutral-500"
                                 }`}
                         >
                             {item.icon}

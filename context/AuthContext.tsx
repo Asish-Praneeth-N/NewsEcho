@@ -1,15 +1,18 @@
+
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
 import {
     User,
     onAuthStateChanged,
+    onIdTokenChanged, // Added import
     signInWithPopup,
     signOut,
 } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
 import { auth, db, googleProvider } from "../lib/firebase";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie"; // Added import
 
 export type Role = "user" | "admin" | "super_admin";
 
@@ -25,34 +28,37 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
-    const [role, setRole] = useState<Role | null>(null);
+    const [role, setRole] = useState<Role | null>(null); // "user" | "admin" | "super_admin"
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
-        let unsubscribeFirestore: (() => void) | null = null;
+        let unsubscribeRoleListener: (() => void) | null = null;
 
-        const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser: User | null) => {
+        // Use onIdTokenChanged to handle token refreshes automatically
+        const unsubscribeAuth = onIdTokenChanged(auth, async (currentUser: User | null) => {
             setLoading(true); // Temporarily true while we fetch role
 
             if (currentUser) {
                 setUser(currentUser);
+                
+                // Get and set token in cookie for Middleware
+                const token = await currentUser.getIdToken();
+                Cookies.set("authToken", token, { expires: 1/24, secure: true }); // 1 hour
 
                 // Real-time listener for Role
                 const userDocRef = doc(db, "users", currentUser.uid);
+                
+                // Cancel previous listener if any (e.g. fast user switch)
+                if (unsubscribeRoleListener) {
+                    unsubscribeRoleListener();
+                }
 
-                unsubscribeFirestore = onSnapshot(userDocRef, (docSnapshot) => {
-                    if (docSnapshot.exists()) {
-                        const userData = docSnapshot.data();
-                        const newRole = userData.role as Role;
-                        setRole(newRole);
-
-                        // Optional: Ensure strict redirect logic here if needed, 
-                        // but usually handled by middleware/page logic on navigation.
+                unsubscribeRoleListener = onSnapshot(userDocRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        setRole(docSnap.data().role as Role);
                     } else {
-                        // Edge case: User in Auth but not Firestore
-                        // We do nothing here, waiting for sign-up logic to complete
-                        setRole(null);
+                        setRole("user"); // Default fallback if user doc doesn't exist
                     }
                     setLoading(false);
                 }, (error) => {
@@ -63,9 +69,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } else {
                 setUser(null);
                 setRole(null);
-                if (unsubscribeFirestore) {
-                    unsubscribeFirestore();
-                    unsubscribeFirestore = null;
+                Cookies.remove("authToken");
+                
+                if (unsubscribeRoleListener) {
+                    unsubscribeRoleListener();
+                    unsubscribeRoleListener = null;
                 }
                 setLoading(false);
             }
@@ -73,8 +81,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         return () => {
             unsubscribeAuth();
-            if (unsubscribeFirestore) {
-                unsubscribeFirestore();
+            if (unsubscribeRoleListener) {
+                unsubscribeRoleListener();
             }
         };
     }, []);
