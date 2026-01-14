@@ -1,26 +1,79 @@
 @import "tailwindcss";
 
+@theme {
+  --font-inter: var(--font-inter);
+  --font-playfair: var(--font-playfair);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #000000;
+  --foreground: #FFFFFF;
+  --secondary-text: #A1A1AA;
+  /* Zinc-400 */
+  --muted-text: #52525B;
+  /* Zinc-600 */
+
+  /* Grid Pattern Variables */
+  --grid-color: rgba(255, 255, 255, 0.05);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Minimal Reset */
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--background);
+  font-family: var(--font-inter), sans-serif;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-playfair), serif;
+  font-weight: 500;
+}
+
+/* Utilities */
+.text-serif-italic {
+  font-family: var(--font-playfair), serif;
+  font-style: italic;
+}
+
+.text-secondary {
+  color: var(--secondary-text);
+}
+
+.text-muted {
+  color: var(--muted-text);
+}
+
+
+/* Background Grid - Extremely subtle */
+.bg-grid-pattern {
+  background-size: 40px 40px;
+  background-image: linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+  mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+  /* Fade out top/bottom for softness */
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+}
+
+/* Minimal Glassmorphism - Dark Theme */
+.glass-effect {
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
 }
