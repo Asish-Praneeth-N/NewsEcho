@@ -7,7 +7,7 @@ import Footer from "./components/landing/Footer";
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col bg-black text-white relative overflow-hidden">
+    <main className="min-h-screen flex flex-col bg-black text-white relative overflow-hidden bg-grid-pattern">
       {/* Background Gradients (Same as Auth Pages) */}
       <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-900/20 blur-[120px] rounded-full pointer-events-none z-0"></div>
       <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-900/20 blur-[120px] rounded-full pointer-events-none z-0"></div>

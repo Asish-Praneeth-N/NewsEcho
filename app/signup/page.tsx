@@ -38,6 +38,7 @@ export default function SignupPage() {
                 uid: user.uid,
                 email: user.email,
                 role: "user",
+                adminRequest: false,
                 createdAt: serverTimestamp(),
             });
 

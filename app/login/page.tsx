@@ -32,7 +32,9 @@ export default function LoginPage() {
 
             if (userSnap.exists()) {
                 const role = userSnap.data().role;
-                if (role === "admin") {
+                if (role === "super_admin") {
+                    router.push("/super-admin");
+                } else if (role === "admin") {
                     router.push("/admin");
                 } else {
                     router.push("/dashboard");

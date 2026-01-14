@@ -14,7 +14,8 @@ export default function AdminDashboard() {
             if (!user) {
                 router.push("/login"); // Unauthenticated -> Login
             } else if (role !== "admin") {
-                router.push("/dashboard"); // Regular User -> User Dashboard
+                if (role === "super_admin") router.push("/super-admin");
+                else router.push("/dashboard");
             }
         }
     }, [user, role, loading, router]);

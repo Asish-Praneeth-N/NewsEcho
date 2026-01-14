@@ -7,13 +7,15 @@ import {
     signInWithPopup,
     signOut,
 } from "firebase/auth";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
 import { auth, db, googleProvider } from "../lib/firebase";
 import { useRouter } from "next/navigation";
 
+export type Role = "user" | "admin" | "super_admin";
+
 interface AuthContextType {
     user: User | null;
-    role: "user" | "admin" | null;
+    role: Role | null;
     loading: boolean;
     signInWithGoogle: () => Promise<void>;
     logout: () => Promise<void>;
@@ -23,38 +25,58 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
-    const [role, setRole] = useState<"user" | "admin" | null>(null);
+    const [role, setRole] = useState<Role | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser: User | null) => {
-            setLoading(true);
+        let unsubscribeFirestore: (() => void) | null = null;
+
+        const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser: User | null) => {
+            setLoading(true); // Temporarily true while we fetch role
+
             if (currentUser) {
                 setUser(currentUser);
-                // Fetch Role
-                try {
-                    const userDocRef = doc(db, "users", currentUser.uid);
-                    const userSnap = await getDoc(userDocRef);
 
-                    if (userSnap.exists()) {
-                        setRole(userSnap.data().role);
+                // Real-time listener for Role
+                const userDocRef = doc(db, "users", currentUser.uid);
+
+                unsubscribeFirestore = onSnapshot(userDocRef, (docSnapshot) => {
+                    if (docSnapshot.exists()) {
+                        const userData = docSnapshot.data();
+                        const newRole = userData.role as Role;
+                        setRole(newRole);
+
+                        // Optional: Ensure strict redirect logic here if needed, 
+                        // but usually handled by middleware/page logic on navigation.
                     } else {
-                        // If manual signup handled elsewhere, this might wait.
-                        // But for safety, if user exists in Auth but not Firestore (rare edge case), default to user logic or handle in signup.
-                        // We will handle doc creation explicitly in Signup flow.
+                        // Edge case: User in Auth but not Firestore
+                        // We do nothing here, waiting for sign-up logic to complete
+                        setRole(null);
                     }
-                } catch (error) {
-                    console.error("Error fetching user role:", error);
-                }
+                    setLoading(false);
+                }, (error) => {
+                    console.error("Firestore Listener Error:", error);
+                    setLoading(false);
+                });
+
             } else {
                 setUser(null);
                 setRole(null);
+                if (unsubscribeFirestore) {
+                    unsubscribeFirestore();
+                    unsubscribeFirestore = null;
+                }
+                setLoading(false);
             }
-            setLoading(false);
         });
 
-        return () => unsubscribe();
+        return () => {
+            unsubscribeAuth();
+            if (unsubscribeFirestore) {
+                unsubscribeFirestore();
+            }
+        };
     }, []);
 
     const signInWithGoogle = async () => {
@@ -71,14 +93,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     uid: user.uid,
                     email: user.email,
                     role: "user",
+                    adminRequest: false,
                     createdAt: serverTimestamp()
                 });
-                setRole("user");
+                // No need to setRole manualy, logic in UseEffect handles it via listener
                 router.push("/dashboard");
             } else {
                 const data = userSnap.data();
-                setRole(data.role);
-                if (data.role === "admin") {
+                const userRole = data.role;
+
+                // Strict Redirect
+                if (userRole === "super_admin") {
+                    router.push("/super-admin");
+                } else if (userRole === "admin") {
                     router.push("/admin");
                 } else {
                     router.push("/dashboard");
